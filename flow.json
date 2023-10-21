@@ -15,6 +15,8 @@
     }
   },
   "contracts": {
+    "DeferredExecutor": "./contracts/DeferredExecutor.cdc",
+    "ExecutableExamples": "./contracts/ExecutableExamples.cdc",
     "FungibleToken": {
       "source": "./node_modules/@flowtyio/flow-contracts/contracts/FungibleToken.cdc",
       "aliases": {
@@ -26,7 +28,10 @@
   },
   "deployments": {
     "emulator": {
-      "emulator-account": [],
+      "emulator-account": [
+        "DeferredExecutor",
+        "ExecutableExamples"
+      ],
       "emulator-ft": [
         "FungibleToken"
       ]
