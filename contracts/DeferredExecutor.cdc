@@ -13,17 +13,17 @@ pub contract DeferredExecutor {
 
     pub struct Details {
         pub let bounty: UFix64
-        pub let runAfter: UInt64
+        pub let runAfter: UInt64?
         pub let paymentType: Type
-        pub let expirationTimestamp: UInt64
+        pub let expiresOn: UInt64?
         pub let runnableBy: Address?
         pub var hasRun: Bool
 
-        init(bounty: UFix64, runAfter: UInt64, paymentType: Type, expirationTimestamp: UInt64, runnableBy: Address?, hasRun: Bool) {
+        init(bounty: UFix64, runAfter: UInt64?, paymentType: Type, expiresOn: UInt64?, runnableBy: Address?, hasRun: Bool) {
             self.bounty = bounty
             self.runAfter = runAfter
             self.paymentType = paymentType
-            self.expirationTimestamp = expirationTimestamp
+            self.expiresOn = expiresOn
             self.runnableBy = runnableBy
             self.hasRun = hasRun
         }
@@ -37,6 +37,10 @@ pub contract DeferredExecutor {
         pub fun execute()
     }
 
+    pub resource interface JobPublic {
+        pub fun getDetails(): Details
+    }
+
     /*
     Job is the main resource of DeferredExecutor. It wraps an executable which will be executed when a job
     is run. A job can only be run once, and can restric when it can be run, for how long it is able to be run, and
@@ -44,17 +48,32 @@ pub contract DeferredExecutor {
 
     Once a job has been run, its bounty is returned.
     */
-    pub resource Job {
-        pub let details: Details
+    pub resource Job: JobPublic {
+        access(contract) let details: Details
         access(self) let executable: @{Executable}
         access(self) let payment: @FungibleToken.Vault
 
-        // set to access(contract) so we can ensure proper cleanup. 
-        // use the Runner resource to facilitate running a job
+        /*
+        run - Executes this job's Executable, returns payment, and sets this job to run.
+        Once run, a job cannot be run again.
+
+        A job will fail to be run if:
+            - Its executable fails (DeferredExecutor is not in control of this!)
+            - The job has expired (current timestamp is greater than job.details.expiresOn)
+            - The job cannot be run yet (current timestamp is less than job.details.runAfter)
+            - The job has already been run
+
+        Returns: A FungibleToken Vault with a balance equal to the job.details.bounty
+        */
         access(contract) fun run(): @FungibleToken.Vault {
             pre {
                 !self.details.hasRun: "cannot run a job multiple times"
-                self.details.expirationTimestamp >= UInt64(getCurrentBlock().timestamp): "job has expired"
+                self.details.expiresOn == nil || self.details.expiresOn! >= UInt64(getCurrentBlock().timestamp): "job has expired"
+                self.details.runAfter == nil || self.details.runAfter! < UInt64(getCurrentBlock().timestamp): "job cannot be run yet"
+            }
+
+            post {
+                self.details.bounty == result.balance: "returned vault balance is not equal to the job's bounty"
             }
 
             let payment <- self.payment.withdraw(amount: self.payment.balance)
@@ -71,19 +90,19 @@ pub contract DeferredExecutor {
         init(
             executable: @{Executable},
             payment: @FungibleToken.Vault,
-            runAfter: UInt64,
-            expiresOn: UInt64,
+            runAfter: UInt64?,
+            expiresOn: UInt64?,
             runnableBy: Address?
         ) {
-            let timestamp = UInt64(getCurrentBlock().timestamp)
-            assert(runAfter > timestamp, message: "runAfter must be greater than the current block's timestamp")
-            assert(expiresOn > timestamp, message: "expiration must be after current block's timestamp")
+            pre {
+                expiresOn == nil || expiresOn! > UInt64(getCurrentBlock().timestamp, message: "expiration must be after current block's timestamp"
+            }
 
             self.details = Details(
                 bounty: payment.balance,
                 runAfter: runAfter,
                 paymentType: payment.getType(),
-                expirationTimestamp: expiresOn,
+                expiresOn: expiresOn,
                 runnableBy: runnableBy,
                 hasRun: false
             )
@@ -99,18 +118,18 @@ pub contract DeferredExecutor {
     }
 
     pub resource interface ContainerPublic {
-        pub fun borrowJob(id: UInt64): &Job?
+        pub fun borrowJob(id: UInt64): &Job{JobPublic}?
         pub fun runJob(jobID: UInt64, identity: &{Identity}): @FungibleToken.Vault
     }
 
     // empty resource to borrow with so that we can restrict who is able to run a job
     pub resource interface Identity {}
 
-    pub resource Container: ContainerPublic {
+    pub resource Container: ContainerPublic, Identity {
         pub let jobs: @{UInt64: Job}
 
-        pub fun borrowJob(id: UInt64): &Job? {
-            return &self.jobs[id] as &Job?
+        pub fun borrowJob(id: UInt64): &Job{JobPublic}? {
+            return &self.jobs[id] as &Job{JobPublic}?
         }
 
         pub fun cleanupJob(jobID: UInt64) {
@@ -136,11 +155,20 @@ pub contract DeferredExecutor {
             return <- tokens
         }
 
+        /*
+        addJob
+        The main entry point for those who wish to add jobs to be executed. It accepts:
+            - executable: A resource implementing the Executable interface. exeutable.Execute() is the function that will be run on job execution
+            - payment: The bounty offered for running this job
+            - runAfter: An optional unix timestamp which must be passed in order for the job to be runnable
+            - expiresOn: A unix timestamp after which the job cannot be run anymore
+            - runnableBy: An optional address dictating who is permitted to run this job
+        */
         pub fun addJob(
             executable: @{Executable},
             payment: @FungibleToken.Vault,
-            runAfter: UInt64,
-            expiresOn: UInt64,
+            runAfter: UInt64?,
+            expiresOn: UInt64?,
             runnableBy: Address?
         ) {
             let job <- create Job(
