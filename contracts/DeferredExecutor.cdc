@@ -9,7 +9,7 @@ pub contract DeferredExecutor {
     pub let ContainerPublicPath: PublicPath
 
     pub event JobCreated(address: Address, id: UInt64, details: Details)
-    pub event JobCompleted(address: Address, id: UInt64, bounty: UFix64, paymentIdentifier: String, run: Bool)
+    pub event JobCompleted(address: Address, id: UInt64, bounty: UFix64, paymentIdentifier: String, run: Bool, runBy: Address?)
 
     pub struct Details {
         pub let bounty: UFix64
@@ -83,6 +83,14 @@ pub contract DeferredExecutor {
             return <- payment
         }
 
+        pub fun cancel(): @FungibleToken.Vault {
+            pre {
+                !self.details.hasRun: "cannot cancel a job that's already been run"
+            }
+
+            return <- self.payment.withdraw(amount: self.payment.balance)
+        }
+
         pub fun getDetails(): Details {
             return self.details
         }
@@ -95,7 +103,7 @@ pub contract DeferredExecutor {
             runnableBy: Address?
         ) {
             pre {
-                expiresOn == nil || expiresOn! > UInt64(getCurrentBlock().timestamp, message: "expiration must be after current block's timestamp"
+                expiresOn == nil || expiresOn! > UInt64(getCurrentBlock().timestamp): "expiration must be after current block's timestamp"
             }
 
             self.details = Details(
@@ -137,12 +145,19 @@ pub contract DeferredExecutor {
             return self.jobs.keys
         }
 
-        pub fun cleanupJob(jobID: UInt64) {
+        // cancelJob
+        // Removes the specified job from this container. The creator of the job might not
+        // want a job to be executed anymore, and should 
+        pub fun cancelJob(jobID: UInt64): @FungibleToken.Vault {
             let job <- self.jobs.remove(key: jobID)
                 ?? panic("job not found")
-            assert(job.details.hasRun, message: "can only cleanup a job that has been run")
 
+            let tokens <- job.cancel()
+
+            emit JobCompleted(address: self.owner!.address, id: jobID, bounty: job.details.bounty, paymentIdentifier: job.details.paymentType.identifier, run: job.details.hasRun, runBy: nil)
             destroy job
+
+            return <- tokens
         }
 
         pub fun runJob(jobID: UInt64, identity: &{Identity}): @FungibleToken.Vault {
@@ -151,9 +166,11 @@ pub contract DeferredExecutor {
             let tokens <- job.run()
 
             let details = job.getDetails()
-            assert(details.runnableBy == nil || details.runnableBy! == identity.owner!.address, message: "job cannot be run by given identity")
+            let runner = identity.owner!.address
 
-            emit JobCompleted(address: self.owner!.address, id: jobID, bounty: details.bounty, paymentIdentifier: tokens.getType().identifier, run: job.details.hasRun)
+            assert(details.runnableBy == nil || details.runnableBy! == runner, message: "job cannot be run by given identity")
+
+            emit JobCompleted(address: self.owner!.address, id: jobID, bounty: details.bounty, paymentIdentifier: tokens.getType().identifier, run: job.details.hasRun, runBy: runner)
             destroy job
 
 

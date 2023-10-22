@@ -10,8 +10,7 @@ pub fun main(
     runnableBy: Address?,
     hasRun: Bool
 ) {
-    let acct = getAuthAccount(addr)
-    let container = acct.borrow<&DeferredExecutor.Container>(from: DeferredExecutor.ContainerStoragePath)
+    let container = getAccount(addr).getCapability<&DeferredExecutor.Container{DeferredExecutor.ContainerPublic}>(DeferredExecutor.ContainerPublicPath).borrow()
         ?? panic("container not found")
     let job = container.borrowJob(id: id)
         ?? panic("job not found")
