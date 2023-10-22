@@ -120,6 +120,7 @@ pub contract DeferredExecutor {
     pub resource interface ContainerPublic {
         pub fun borrowJob(id: UInt64): &Job{JobPublic}?
         pub fun runJob(jobID: UInt64, identity: &{Identity}): @FungibleToken.Vault
+        pub fun getIDs(): [UInt64]
     }
 
     // empty resource to borrow with so that we can restrict who is able to run a job
@@ -130,6 +131,10 @@ pub contract DeferredExecutor {
 
         pub fun borrowJob(id: UInt64): &Job{JobPublic}? {
             return &self.jobs[id] as &Job{JobPublic}?
+        }
+
+        pub fun getIDs(): [UInt64] {
+            return self.jobs.keys
         }
 
         pub fun cleanupJob(jobID: UInt64) {
@@ -156,15 +161,15 @@ pub contract DeferredExecutor {
         }
 
         /*
-        addJob
-        The main entry point for those who wish to add jobs to be executed. It accepts:
+        createJob
+        The main entry point for those who wish to creates jobs to be executed. It accepts:
             - executable: A resource implementing the Executable interface. exeutable.Execute() is the function that will be run on job execution
             - payment: The bounty offered for running this job
             - runAfter: An optional unix timestamp which must be passed in order for the job to be runnable
             - expiresOn: A unix timestamp after which the job cannot be run anymore
             - runnableBy: An optional address dictating who is permitted to run this job
         */
-        pub fun addJob(
+        pub fun createJob(
             executable: @{Executable},
             payment: @FungibleToken.Vault,
             runAfter: UInt64?,
@@ -190,6 +195,10 @@ pub contract DeferredExecutor {
         destroy() {
             destroy self.jobs
         }
+    }
+
+    pub fun createContainer(): @Container {
+        return <- create Container()
     }
 
     init() {

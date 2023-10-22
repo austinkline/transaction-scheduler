@@ -23,4 +23,11 @@ pub contract ExecutableExamples {
             destroy self.tokens
         }
     }
+
+    pub fun createTokenTransferExecutable(
+        tokens: @FungibleToken.Vault,
+        destinaton: Capability<&{FungibleToken.Receiver}>
+    ): @TokenTransferExecutable {
+        return <- create TokenTransferExecutable(tokens: <-tokens, destinaton: destinaton)
+    }
 }

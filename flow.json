@@ -17,6 +17,7 @@
   "contracts": {
     "DeferredExecutor": "./contracts/DeferredExecutor.cdc",
     "ExecutableExamples": "./contracts/ExecutableExamples.cdc",
+    "ExampleToken": "./contracts/helper/ExampleToken.cdc",
     "FungibleToken": {
       "source": "./node_modules/@flowtyio/flow-contracts/contracts/FungibleToken.cdc",
       "aliases": {
@@ -30,7 +31,8 @@
     "emulator": {
       "emulator-account": [
         "DeferredExecutor",
-        "ExecutableExamples"
+        "ExecutableExamples",
+        "ExampleToken"
       ],
       "emulator-ft": [
         "FungibleToken"
