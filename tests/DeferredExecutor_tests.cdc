@@ -208,6 +208,32 @@ pub fun testExecuteJobWrongIdentity() {
     expectJobExecutionFailure(executor: executor, creator: creator, jobID: jobID, failureMessageContains: expectedErrorMessage, failureMessageType: ErrorType.TX_PRE)
 }
 
+pub fun testDestroyContainer() {
+    let creator = blockchain.createAccount()
+    let receiver = blockchain.createAccount()
+    let executor = blockchain.createAccount()
+
+    setupContainer(creator)
+    setupExampleToken(creator)
+    mintExampleTokens(creator, amount: 10.0)
+
+    setupExampleToken(receiver)
+    setupExampleToken(executor)
+
+    let creatorBalance = getTokenBalance(creator, path: flowTokenStoragePath)
+
+    let transferAmount = 1.0
+    let bounty = 1.0
+    let runAfter = nil
+
+    createTokenTransferJob(acct: creator, transferAmount: transferAmount, bounty: bounty, receiverAddr: receiver.address, runAfter: runAfter, expiresOn: nil, runnableBy: receiver.address)
+    destroyContainer(acct: creator)
+}
+
+pub fun destroyContainer(acct: Test.Account) {
+    txExecutor("destroy_container.cdc", [acct], [], nil, nil)
+}
+
 pub fun expectJobExecutionFailure(executor: Test.Account, creator: Test.Account, jobID: UInt64, failureMessageContains: String, failureMessageType: ErrorType) {
     txExecutor("execute_job.cdc", [executor], [creator.address, jobID], failureMessageContains, failureMessageType)
 }
