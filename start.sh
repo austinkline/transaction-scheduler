@@ -1,4 +1,8 @@
 #!/bin/bash
+
+echo "insalling contract dependencies..."
+npm i
+
 echo "installing flow cli..."
 sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/master/install.sh)" -- v1.4.5
 export PATH=$PATH:/root/.local/bin

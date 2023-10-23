@@ -1,4 +1,4 @@
-FROM golang:1.18
+FROM node:18
 
 WORKDIR /usr/app
 
