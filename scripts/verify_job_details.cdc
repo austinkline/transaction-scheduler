@@ -1,4 +1,4 @@
-import "DeferredExecutor"
+import "TransactionScheduler"
 
 pub fun main(
     addr: Address,
@@ -10,7 +10,7 @@ pub fun main(
     runnableBy: Address?,
     hasRun: Bool
 ) {
-    let container = getAccount(addr).getCapability<&DeferredExecutor.Container{DeferredExecutor.ContainerPublic}>(DeferredExecutor.ContainerPublicPath).borrow()
+    let container = getAccount(addr).getCapability<&TransactionScheduler.Container{TransactionScheduler.ContainerPublic}>(TransactionScheduler.ContainerPublicPath).borrow()
         ?? panic("container not found")
     let job = container.borrowJob(id: id)
         ?? panic("job not found")

@@ -328,17 +328,17 @@ pub fun waitUntilTimestamp(timestamp: UInt64) {
 }
 
 pub fun setup() {
-    accounts["DeferredExecutor"] = adminAccount
+    accounts["TransactionScheduler"] = adminAccount
     accounts["ExecutableExamples"] = adminAccount
     accounts["ExampleToken"] = adminAccount
 
     blockchain.useConfiguration(Test.Configuration({
-        "DeferredExecutor": adminAccount.address,
+        "TransactionScheduler": adminAccount.address,
         "ExecutableExamples": adminAccount.address,
         "ExampleToken": adminAccount.address
     }))
 
-    deploy("DeferredExecutor", adminAccount, "../contracts/DeferredExecutor.cdc")
+    deploy("TransactionScheduler", adminAccount, "../contracts/TransactionScheduler.cdc")
     deploy("ExecutableExamples", adminAccount, "../contracts/ExecutableExamples.cdc")
     deploy("ExampleToken", adminAccount, "../contracts/helper/ExampleToken.cdc")
 }

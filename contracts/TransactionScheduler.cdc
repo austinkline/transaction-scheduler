@@ -1,10 +1,10 @@
 import "FungibleToken"
 
 /*
-DeferredExecutor is a contract to allow any account to request an action be run for them in
+TransactionScheduler is a contract to allow any account to request an action be run for them in
 exchange for a bounty.
 */
-pub contract DeferredExecutor {
+pub contract TransactionScheduler {
     pub let ContainerStoragePath: StoragePath
     pub let ContainerPublicPath: PublicPath
 
@@ -42,7 +42,7 @@ pub contract DeferredExecutor {
     }
 
     /*
-    Job is the main resource of DeferredExecutor. It wraps an executable which will be executed when a job
+    Job is the main resource of TransactionScheduler. It wraps an executable which will be executed when a job
     is run. A job can only be run once, and can restric when it can be run, for how long it is able to be run, and
     who is able to run it.
 
@@ -58,7 +58,7 @@ pub contract DeferredExecutor {
         Once run, a job cannot be run again.
 
         A job will fail to be run if:
-            - Its executable fails (DeferredExecutor is not in control of this!)
+            - Its executable fails (TransactionScheduler is not in control of this!)
             - The job has expired (current timestamp is greater than job.details.expiresOn)
             - The job cannot be run yet (current timestamp is less than job.details.runAfter)
             - The job has already been run
@@ -219,7 +219,7 @@ pub contract DeferredExecutor {
     }
 
     init() {
-        let baseIdentifier = "DeferredExecutor_".concat(self.account.address.toString())
+        let baseIdentifier = "TransactionScheduler_".concat(self.account.address.toString())
         let containerIdentifier = baseIdentifier.concat("_Container")
         self.ContainerPublicPath = PublicPath(identifier: containerIdentifier)!
         self.ContainerStoragePath = StoragePath(identifier: containerIdentifier)!

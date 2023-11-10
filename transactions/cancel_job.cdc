@@ -1,9 +1,9 @@
-import "DeferredExecutor"
+import "TransactionScheduler"
 import "ExampleToken"
 
 transaction(jobID: UInt64) {
     prepare(acct: AuthAccount) {
-        let container = acct.borrow<&DeferredExecutor.Container>(from: DeferredExecutor.ContainerStoragePath)
+        let container = acct.borrow<&TransactionScheduler.Container>(from: TransactionScheduler.ContainerStoragePath)
             ?? panic("container not found")
         
         let returnedPayment <- container.cancelJob(jobID: jobID)

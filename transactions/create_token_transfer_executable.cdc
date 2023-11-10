@@ -1,4 +1,4 @@
-import "DeferredExecutor"
+import "TransactionScheduler"
 import "ExecutableExamples"
 import "FungibleToken"
 import "ExampleToken"
@@ -11,22 +11,22 @@ transaction(
     expiresOn: UInt64?,
     runnableBy: Address?
 ) {
-    let container: &DeferredExecutor.Container
-    let executable: @{DeferredExecutor.Executable}
+    let container: &TransactionScheduler.Container
+    let executable: @{TransactionScheduler.Executable}
     let bounty: @FungibleToken.Vault
 
     prepare(acct: AuthAccount) {
-        if acct.borrow<&AnyResource>(from: DeferredExecutor.ContainerStoragePath) == nil {
-            let container <- DeferredExecutor.createContainer()
-            acct.save(<-container, to: DeferredExecutor.ContainerStoragePath)
+        if acct.borrow<&AnyResource>(from: TransactionScheduler.ContainerStoragePath) == nil {
+            let container <- TransactionScheduler.createContainer()
+            acct.save(<-container, to: TransactionScheduler.ContainerStoragePath)
         }
 
-        if !acct.getCapability<&DeferredExecutor.Container{DeferredExecutor.ContainerPublic}>(DeferredExecutor.ContainerPublicPath).check() {
-            acct.unlink(DeferredExecutor.ContainerPublicPath)
-            acct.link<&DeferredExecutor.Container{DeferredExecutor.ContainerPublic}>(DeferredExecutor.ContainerPublicPath, target: DeferredExecutor.ContainerStoragePath)
+        if !acct.getCapability<&TransactionScheduler.Container{TransactionScheduler.ContainerPublic}>(TransactionScheduler.ContainerPublicPath).check() {
+            acct.unlink(TransactionScheduler.ContainerPublicPath)
+            acct.link<&TransactionScheduler.Container{TransactionScheduler.ContainerPublic}>(TransactionScheduler.ContainerPublicPath, target: TransactionScheduler.ContainerStoragePath)
         }
 
-        self.container = acct.borrow<&DeferredExecutor.Container>(from: DeferredExecutor.ContainerStoragePath)
+        self.container = acct.borrow<&TransactionScheduler.Container>(from: TransactionScheduler.ContainerStoragePath)
             ?? panic("container not found")
 
         let etVault = acct.borrow<&{FungibleToken.Provider}>(from: ExampleToken.VaultStoragePath)
