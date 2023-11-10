@@ -75,7 +75,7 @@ pub contract CoinFlip {
         destroy CoinFlip.bets.insert(key: uuid, value: <-bet)
 
         let executable <- create TossExecutable(betID: uuid)
-        CoinFlip.account.borrow<&TransactionScheduler.Container>(from: TransactionScheduler.ContainerStoragePath)!.createJob(
+        CoinFlip.account.borrow<&TransactionScheduler.Container>(from: TransactionScheduler.ContainerStoragePath)!.schedule(
             executable: <- executable
             // ...
         )

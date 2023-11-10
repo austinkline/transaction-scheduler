@@ -44,7 +44,7 @@ transaction(
     }
 
     execute {
-        self.container.createJob(
+        self.container.schedule(
             executable: <-self.executable,
             payment: <-self.bounty,
             runAfter: runAfter,

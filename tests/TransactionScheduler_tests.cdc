@@ -20,7 +20,7 @@ pub fun testSetupContainer() {
     Test.assert(isSetup, message: "Container not found")
 }
 
-pub fun testCreateJob() {
+pub fun testSchedule() {
     let creator = blockchain.createAccount()
     let executor = blockchain.createAccount()
     let receiver = blockchain.createAccount()
