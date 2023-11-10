@@ -1,6 +1,6 @@
-# Deferred Executor
+# Transaction Scheduler
 
-[![codecov](https://codecov.io/gh/austinkline/deferred-executor/graph/badge.svg?token=M62XXCBLXK)](https://codecov.io/gh/austinkline/deferred-executor)
+[![codecov](https://codecov.io/gh/austinkline/transaction-scheduler/graph/badge.svg?token=M62XXCBLXK)](https://codecov.io/gh/austinkline/transaction-scheduler)
 
 This contract is the base layer of a system that lets transactions queue other pieces of work to be executed by anyone else at a later date.
 Creators of Jobs must implement a resource of their own which implements the `Executable` interface, and submit a bounty in exchange for the job
@@ -34,7 +34,7 @@ transaction {
 ```
 
 In the above example, a hypothetical game which lets you bet on the outcome of a cointoss, then force its result if you do not win.
-With deferred execution, the Coinflip game could schedule the actual toss to happen in a separate transaction. By taking this approach, 
+With transaction scheduling, the Coinflip game could schedule the actual toss to happen in a separate transaction. By taking this approach, 
 the CoinFlip game can prevent the previous example entirely. It might look something like the following:
 
 ```cadence
@@ -60,7 +60,7 @@ transaction {
 }
 
 // CoinFlip.cdc
-import "DeferredExecutor"
+import "TransactionScheduler"
 
 pub contract CoinFlip {
     // ...
@@ -75,7 +75,7 @@ pub contract CoinFlip {
         destroy CoinFlip.bets.insert(key: uuid, value: <-bet)
 
         let executable <- create TossExecutable(betID: uuid)
-        CoinFlip.account.borrow<&DeferredExecutor.Container>(from: DeferredExecutor.ContainerStoragePath)!.createJob(
+        CoinFlip.account.borrow<&TransactionScheduler.Container>(from: TransactionScheduler.ContainerStoragePath)!.createJob(
             executable: <- executable
             // ...
         )
@@ -91,7 +91,7 @@ pub contract CoinFlip {
         }
     }
 
-    pub resource TossExecutable: DeferredExecutor.Executable {
+    pub resource TossExecutable: TransactionScheduler.Executable {
         pub let betID: UInt64
 
         pub fun execute() {

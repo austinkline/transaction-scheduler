@@ -1,15 +1,15 @@
-import "DeferredExecutor"
+import "TransactionScheduler"
 
 transaction {
     prepare(acct: AuthAccount) {
-        if acct.borrow<&AnyResource>(from: DeferredExecutor.ContainerStoragePath) == nil {
-            let container <- DeferredExecutor.createContainer()
-            acct.save(<-container, to: DeferredExecutor.ContainerStoragePath)
+        if acct.borrow<&AnyResource>(from: TransactionScheduler.ContainerStoragePath) == nil {
+            let container <- TransactionScheduler.createContainer()
+            acct.save(<-container, to: TransactionScheduler.ContainerStoragePath)
         }
 
-        if !acct.getCapability<&DeferredExecutor.Container{DeferredExecutor.ContainerPublic}>(DeferredExecutor.ContainerPublicPath).check() {
-            acct.unlink(DeferredExecutor.ContainerPublicPath)
-            acct.link<&DeferredExecutor.Container{DeferredExecutor.ContainerPublic}>(DeferredExecutor.ContainerPublicPath, target: DeferredExecutor.ContainerStoragePath)
+        if !acct.getCapability<&TransactionScheduler.Container{TransactionScheduler.ContainerPublic}>(TransactionScheduler.ContainerPublicPath).check() {
+            acct.unlink(TransactionScheduler.ContainerPublicPath)
+            acct.link<&TransactionScheduler.Container{TransactionScheduler.ContainerPublic}>(TransactionScheduler.ContainerPublicPath, target: TransactionScheduler.ContainerStoragePath)
         }
     }
 }

@@ -1,4 +1,4 @@
-import "DeferredExecutor"
+import "TransactionScheduler"
 import "ExecutableExamples"
 
 pub fun main(): Bool {

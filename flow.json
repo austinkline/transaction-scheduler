@@ -15,7 +15,7 @@
     }
   },
   "contracts": {
-    "DeferredExecutor": "./contracts/DeferredExecutor.cdc",
+    "TransactionScheduler": "./contracts/TransactionScheduler.cdc",
     "ExecutableExamples": "./contracts/ExecutableExamples.cdc",
     "ExampleToken": "./contracts/helper/ExampleToken.cdc",
     "FungibleToken": {
@@ -30,7 +30,7 @@
   "deployments": {
     "emulator": {
       "emulator-account": [
-        "DeferredExecutor",
+        "TransactionScheduler",
         "ExecutableExamples",
         "ExampleToken"
       ],

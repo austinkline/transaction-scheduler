@@ -1,8 +1,8 @@
-import "DeferredExecutor"
+import "TransactionScheduler"
 import "FungibleToken"
 
 pub contract ExecutableExamples {
-    pub resource TokenTransferExecutable: DeferredExecutor.Executable {
+    pub resource TokenTransferExecutable: TransactionScheduler.Executable {
         access(self) var tokens: @FungibleToken.Vault
         pub let destinaton: Capability<&{FungibleToken.Receiver}>
 

@@ -1,6 +1,6 @@
-import "DeferredExecutor"
+import "TransactionScheduler"
 
 pub fun main(addr: Address): Bool {
     let acct = getAccount(addr)
-    return acct.getCapability<&DeferredExecutor.Container{DeferredExecutor.ContainerPublic}>(DeferredExecutor.ContainerPublicPath).check()
+    return acct.getCapability<&TransactionScheduler.Container{TransactionScheduler.ContainerPublic}>(TransactionScheduler.ContainerPublicPath).check()
 }
