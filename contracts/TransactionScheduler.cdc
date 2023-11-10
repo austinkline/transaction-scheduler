@@ -178,7 +178,7 @@ pub contract TransactionScheduler {
         }
 
         /*
-        createJob
+        schedule
         The main entry point for those who wish to creates jobs to be executed. It accepts:
             - executable: A resource implementing the Executable interface. exeutable.Execute() is the function that will be run on job execution
             - payment: The bounty offered for running this job
@@ -186,7 +186,7 @@ pub contract TransactionScheduler {
             - expiresOn: A unix timestamp after which the job cannot be run anymore
             - runnableBy: An optional address dictating who is permitted to run this job
         */
-        pub fun createJob(
+        pub fun schedule(
             executable: @{Executable},
             payment: @FungibleToken.Vault,
             runAfter: UInt64?,
