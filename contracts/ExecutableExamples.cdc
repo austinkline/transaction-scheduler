@@ -2,7 +2,7 @@ import "TransactionScheduler"
 import "FungibleToken"
 
 pub contract ExecutableExamples {
-    pub event BasicExecuted(id: UInt64)
+    pub event BasicExecuted(id: UInt64, message: String)
 
     pub resource TokenTransferExecutable: TransactionScheduler.Executable {
         access(self) var tokens: @FungibleToken.Vault
@@ -27,13 +27,19 @@ pub contract ExecutableExamples {
     }
 
     pub resource BasicExecutable: TransactionScheduler.Executable {
+        access(self) let message: String
+
         pub fun execute() {
-            emit BasicExecuted(id: self.uuid)
+            emit BasicExecuted(id: self.uuid, message: self.message)
+        }
+
+        init(message: String) {
+            self.message = message
         }
     }
 
-    pub fun createBasicExecutable(): @BasicExecutable {
-        return <- create BasicExecutable()
+    pub fun createBasicExecutable(message: String): @BasicExecutable {
+        return <- create BasicExecutable(message: message)
     }
 
     pub fun createTokenTransferExecutable(

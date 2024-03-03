@@ -1,13 +1,14 @@
 import "TransactionScheduler"
 import "ExecutableExamples"
 import "FungibleToken"
-import "FlowToken"
+import "ExampleToken"
 
 transaction(
     bounty: UFix64,
     runAfter: UInt64?,
     expiresOn: UInt64?,
-    runnableBy: Address?
+    runnableBy: Address?,
+    message: String
 ) {
     let container: &TransactionScheduler.Container
     let executable: @{TransactionScheduler.Executable}
@@ -27,10 +28,10 @@ transaction(
         self.container = acct.borrow<&TransactionScheduler.Container>(from: TransactionScheduler.ContainerStoragePath)
             ?? panic("container not found")
 
-        let v = acct.borrow<&{FungibleToken.Provider}>(from: /storage/flowTokenVault)
+        let v = acct.borrow<&{FungibleToken.Provider}>(from: ExampleToken.VaultStoragePath)
             ?? panic("vault not found")
 
-        self.executable <- ExecutableExamples.createBasicExecutable()
+        self.executable <- ExecutableExamples.createBasicExecutable(message: message)
         self.bounty <- v.withdraw(amount: bounty)
     }
 
