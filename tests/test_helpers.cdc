@@ -7,25 +7,20 @@
 
 import Test
 
-pub let blockchain = Test.newEmulatorBlockchain()
+pub fun deployAll() {
+    deploy("ExampleToken", "../contracts/helper/ExampleToken.cdc", [])
+    deploy("TransactionScheduler", "../contracts/TransactionScheduler.cdc", [])
+    deploy("ExecutableExamples", "../contracts/ExecutableExamples.cdc", [])
+}
 
-pub fun deploy(_ contractName: String, _ account: Test.Account, _ path: String) {
-    let err = blockchain.deployContract(
-        name: contractName,
-        code: Test.readFile(path),
-        account: account,
-        arguments: [],
-    )
-
-    Test.expect(err, Test.beNil())
-    if err != nil {
-        panic(err!.message)
-    }
+pub fun deploy(_ name: String, _ path: String, _ arguments: [AnyStruct]) {
+    let err = Test.deployContract(name: name, path: path, arguments: arguments)
+    Test.expect(err, Test.beNil()) 
 }
 
 pub fun scriptExecutor(_ scriptName: String, _ arguments: [AnyStruct]): AnyStruct? {
     let scriptCode = loadCode(scriptName, "scripts")
-    let scriptResult = blockchain.executeScript(scriptCode, arguments)
+    let scriptResult = Test.executeScript(scriptCode, arguments)
 
     if let failureError = scriptResult.error {
         panic(
@@ -51,7 +46,7 @@ pub fun txExecutor(_ txName: String, _ signers: [Test.Account], _ arguments: [An
         arguments: arguments,
     )
 
-    let txResult = blockchain.executeTransaction(tx)
+    let txResult = Test.executeTransaction(tx)
     if let err = txResult.error {
         if let expectedErrorMessage = expectedError {
             let ptr = getErrorMessagePointer(errorType: expectedErrorType!)

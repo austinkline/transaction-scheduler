@@ -1,11 +1,17 @@
 import Test
 import "test_helpers.cdc"
 
-pub let adminAccount = blockchain.createAccount()
+import "ExecutableExamples"
+
+pub let adminAccount = Test.createAccount()
 pub let accounts: {String: Test.Account} = {}
 
 pub let flowTokenStoragePath = /storage/flowTokenVault
 pub let exampleTokenStoragePath = /storage/exampleTokenVault
+
+pub fun setup() {
+    deployAll()
+}
 
 pub fun testImports() {
     let res = scriptExecutor("test_imports.cdc", [])! as! Bool
@@ -13,7 +19,7 @@ pub fun testImports() {
 }
 
 pub fun testSetupContainer() {
-    let tmp = blockchain.createAccount()
+    let tmp = Test.createAccount()
     setupContainer(tmp)
 
     let isSetup = scriptExecutor("has_container.cdc", [tmp.address])! as! Bool
@@ -21,9 +27,9 @@ pub fun testSetupContainer() {
 }
 
 pub fun testCreateJob() {
-    let creator = blockchain.createAccount()
-    let executor = blockchain.createAccount()
-    let receiver = blockchain.createAccount()
+    let creator = Test.createAccount()
+    let executor = Test.createAccount()
+    let receiver = Test.createAccount()
 
     setupContainer(creator)
     setupExampleToken(creator)
@@ -43,9 +49,9 @@ pub fun testCreateJob() {
 }
 
 pub fun testExecuteJob() {
-    let creator = blockchain.createAccount()
-    let receiver = blockchain.createAccount()
-    let executor = blockchain.createAccount()
+    let creator = Test.createAccount()
+    let receiver = Test.createAccount()
+    let executor = Test.createAccount()
 
     setupContainer(creator)
     setupExampleToken(creator)
@@ -76,8 +82,8 @@ pub fun testExecuteJob() {
 }
 
 pub fun testCancelJob() {
-    let creator = blockchain.createAccount()
-    let receiver = blockchain.createAccount()
+    let creator = Test.createAccount()
+    let receiver = Test.createAccount()
     setupContainer(creator)
     setupExampleToken(creator)
     mintExampleTokens(creator, amount: 10.0)
@@ -101,9 +107,9 @@ pub fun testCancelJob() {
 }
 
 pub fun testRunJobTooSoon() {
-    let creator = blockchain.createAccount()
-    let receiver = blockchain.createAccount()
-    let executor = blockchain.createAccount()
+    let creator = Test.createAccount()
+    let receiver = Test.createAccount()
+    let executor = Test.createAccount()
 
     setupContainer(creator)
     setupExampleToken(creator)
@@ -126,8 +132,8 @@ pub fun testRunJobTooSoon() {
 }
 
 pub fun testCreateExpiredJob() {
-    let creator = blockchain.createAccount()
-    let receiver = blockchain.createAccount()
+    let creator = Test.createAccount()
+    let receiver = Test.createAccount()
 
     setupContainer(creator)
     setupExampleToken(creator)
@@ -152,9 +158,9 @@ pub fun testCreateExpiredJob() {
 }
 
 pub fun testRunExpiredJob() {
-    let creator = blockchain.createAccount()
-    let receiver = blockchain.createAccount()
-    let executor = blockchain.createAccount()
+    let creator = Test.createAccount()
+    let receiver = Test.createAccount()
+    let executor = Test.createAccount()
 
     setupContainer(creator)
     setupExampleToken(creator)
@@ -184,9 +190,9 @@ pub fun testRunExpiredJob() {
 }
 
 pub fun testExecuteJobWrongIdentity() {
-    let creator = blockchain.createAccount()
-    let receiver = blockchain.createAccount()
-    let executor = blockchain.createAccount()
+    let creator = Test.createAccount()
+    let receiver = Test.createAccount()
+    let executor = Test.createAccount()
 
     setupContainer(creator)
     setupExampleToken(creator)
@@ -209,9 +215,9 @@ pub fun testExecuteJobWrongIdentity() {
 }
 
 pub fun testDestroyContainer() {
-    let creator = blockchain.createAccount()
-    let receiver = blockchain.createAccount()
-    let executor = blockchain.createAccount()
+    let creator = Test.createAccount()
+    let receiver = Test.createAccount()
+    let executor = Test.createAccount()
 
     setupContainer(creator)
     setupExampleToken(creator)
@@ -228,6 +234,24 @@ pub fun testDestroyContainer() {
 
     createTokenTransferJob(acct: creator, transferAmount: transferAmount, bounty: bounty, receiverAddr: receiver.address, runAfter: runAfter, expiresOn: nil, runnableBy: receiver.address)
     destroyContainer(acct: creator)
+}
+
+pub fun testBasicExecutable() {
+    let creator = Test.createAccount()
+    let executor = Test.createAccount()
+    
+    setupExampleToken(creator)
+    setupExampleToken(executor)
+
+    let message = "testBasicExecutable"
+    setupContainer(creator)
+    txExecutor("create_basic_executable.cdc", [creator], [0.0, nil, nil, nil, message], nil, nil)
+
+    let jobID = getJobIDs(creator)[0]
+    executeJob(executor: executor, creator: creator, jobID: jobID)
+
+    let evt = Test.eventsOfType(Type<ExecutableExamples.BasicExecuted>())[0] as! ExecutableExamples.BasicExecuted
+    Test.assertEqual(message, evt.message)
 }
 
 pub fun destroyContainer(acct: Test.Account) {
@@ -325,20 +349,4 @@ pub fun waitUntilTimestamp(timestamp: UInt64) {
         // advance the blockchain time by submitting a heartbeat transaction
         txExecutor("helper/heartbeat.cdc", [adminAccount], [], nil, nil)
     }
-}
-
-pub fun setup() {
-    accounts["TransactionScheduler"] = adminAccount
-    accounts["ExecutableExamples"] = adminAccount
-    accounts["ExampleToken"] = adminAccount
-
-    blockchain.useConfiguration(Test.Configuration({
-        "TransactionScheduler": adminAccount.address,
-        "ExecutableExamples": adminAccount.address,
-        "ExampleToken": adminAccount.address
-    }))
-
-    deploy("TransactionScheduler", adminAccount, "../contracts/TransactionScheduler.cdc")
-    deploy("ExecutableExamples", adminAccount, "../contracts/ExecutableExamples.cdc")
-    deploy("ExampleToken", adminAccount, "../contracts/helper/ExampleToken.cdc")
 }
