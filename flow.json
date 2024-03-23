@@ -22,7 +22,7 @@
       "address": "0x98da8e016abab489",
       "key": {
         "type": "google-kms",
-        "index": 2,
+        "index": 0,
         "signatureAlgorithm": "ECDSA_P256",
         "hashAlgorithm": "SHA2_256",
         "resourceID": "projects/flowty-test/locations/global/keyRings/flow/cryptoKeys/transaction-scheduler/cryptoKeyVersions/1"
