@@ -8,8 +8,8 @@ pub contract TransactionScheduler {
     pub let ContainerStoragePath: StoragePath
     pub let ContainerPublicPath: PublicPath
 
-    pub event JobCreated(address: Address, id: UInt64, details: Details)
-    pub event JobCompleted(address: Address, id: UInt64, bounty: UFix64, paymentIdentifier: String, run: Bool, runBy: Address?)
+    pub event JobCreated(address: Address, id: UInt64, details: Details, executableType: String)
+    pub event JobCompleted(address: Address, id: UInt64, bounty: UFix64, paymentIdentifier: String, run: Bool, runBy: Address?, executableType: String)
 
     pub struct Details {
         pub let bounty: UFix64
@@ -95,6 +95,10 @@ pub contract TransactionScheduler {
             return self.details
         }
 
+        pub fun getExecutableType(): Type {
+            return self.executable.getType()
+        }
+
         init(
             executable: @{Executable},
             payment: @FungibleToken.Vault,
@@ -154,7 +158,7 @@ pub contract TransactionScheduler {
 
             let tokens <- job.cancel()
 
-            emit JobCompleted(address: self.owner!.address, id: jobID, bounty: job.details.bounty, paymentIdentifier: job.details.paymentType.identifier, run: job.details.hasRun, runBy: nil)
+            emit JobCompleted(address: self.owner!.address, id: jobID, bounty: job.details.bounty, paymentIdentifier: job.details.paymentType.identifier, run: job.details.hasRun, runBy: nil, executableType: job.getExecutableType().identifier)
             destroy job
 
             return <- tokens
@@ -170,7 +174,7 @@ pub contract TransactionScheduler {
 
             assert(details.runnableBy == nil || details.runnableBy! == runner, message: "job cannot be run by given identity")
 
-            emit JobCompleted(address: self.owner!.address, id: jobID, bounty: details.bounty, paymentIdentifier: tokens.getType().identifier, run: job.details.hasRun, runBy: runner)
+            emit JobCompleted(address: self.owner!.address, id: jobID, bounty: details.bounty, paymentIdentifier: tokens.getType().identifier, run: job.details.hasRun, runBy: runner, executableType: job.getExecutableType().identifier)
             destroy job
 
 
@@ -201,7 +205,7 @@ pub contract TransactionScheduler {
                 runnableBy: runnableBy
             )
 
-            emit JobCreated(address: self.owner!.address, id: job.uuid, details: job.details)
+            emit JobCreated(address: self.owner!.address, id: job.uuid, details: job.details, executableType: job.getExecutableType().identifier)
             destroy self.jobs.insert(key: job.uuid, <-job)
         }
 

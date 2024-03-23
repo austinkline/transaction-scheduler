@@ -17,6 +17,16 @@
     "emulator-flowtoken": {
       "address": "0ae53cb6e3f42a79",
       "key": "1d951a8dcfda258e9e79ade2bf861334ffdcea54699308a27e78df2a4ae4f35f"
+    },
+    "scheduler-testnet": {
+      "address": "0x98da8e016abab489",
+      "key": {
+        "type": "google-kms",
+        "index": 2,
+        "signatureAlgorithm": "ECDSA_P256",
+        "hashAlgorithm": "SHA2_256",
+        "resourceID": "projects/flowty-test/locations/global/keyRings/flow/cryptoKeys/transaction-scheduler/cryptoKeyVersions/1"
+      }
     }
   },
   "contracts": {
@@ -103,6 +113,12 @@
       ],
       "emulator-flowtoken": [
         "FlowToken"
+      ]
+    },
+    "testnet": {
+      "scheduler-testnet": [
+        "TransactionScheduler",
+        "ExecutableExamples"
       ]
     }
   }
